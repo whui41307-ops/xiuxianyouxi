@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Cultivation World · Cave Residence</title>
+  <style>
+    :root {
+      --bg:#050a12;
+      --panel:rgba(8,16,27,.88);
+      --panel2:rgba(13,24,39,.96);
+      --gold:#d8b86a;
+      --gold2:#f4df9a;
+      --cyan:#4ff4ff;
+      --muted:#9eb3c1;
+      --danger:#ff7469;
+      --green:#85efac;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; min-height:100%; background:radial-gradient(circle at top,#132238 0,#05070c 56%,#030407 100%); color:#f7e6b0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif; }
+    body { display:flex; justify-content:center; }
+    button { font:inherit; }
+    .phone { width:100%; max-width:430px; min-height:100dvh; position:relative; overflow:hidden; background:linear-gradient(180deg,#07111f,#050913); box-shadow:0 0 40px rgba(0,0,0,.65); }
+    .topbar { position:sticky; top:0; z-index:30; padding:10px 12px 8px; background:linear-gradient(180deg,rgba(4,9,15,.97),rgba(4,9,15,.72)); border-bottom:1px solid rgba(216,184,106,.24); backdrop-filter:blur(10px); }
+    .title-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .game-title { font-weight:800; letter-spacing:.04em; font-size:17px; color:var(--gold2); text-shadow:0 0 12px rgba(216,184,106,.35); }
+    .small-btn { border:1px solid rgba(216,184,106,.55); color:var(--gold2); background:rgba(12,24,38,.82); border-radius:999px; padding:6px 10px; cursor:pointer; }
+    .stats { margin-top:8px; display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+    .stat { min-width:0; padding:7px 8px; border:1px solid rgba(216,184,106,.25); border-radius:10px; background:rgba(7,15,25,.72); }
+    .stat label { display:block; color:var(--muted); font-size:11px; line-height:1.1; }
+    .stat strong { display:block; margin-top:3px; color:#fff1bb; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hero { padding:10px 10px 88px; }
+    .section-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:8px 0 8px; }
+    .section-head h2 { margin:0; font-size:18px; color:#ffe6a0; }
+    .section-head p { margin:3px 0 0; color:var(--muted); font-size:12px; }
+    .cave-wrap { position:relative; width:100%; border:1px solid rgba(216,184,106,.6); border-radius:18px; overflow:hidden; background:#071018; box-shadow:0 18px 50px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.05); }
+    .cave-img { display:block; width:100%; height:auto; user-select:none; pointer-events:none; }
+    .hotspot-layer { position:absolute; inset:0; z-index:5; }
+    .hotspot { position:absolute; border:1px solid rgba(79,244,255,0); border-radius:12px; background:rgba(79,244,255,0); cursor:pointer; transition:.14s ease; }
+    .debug .hotspot { border-color:rgba(79,244,255,.75); background:rgba(79,244,255,.11); }
+    .hotspot:hover, .hotspot.active { border-color:rgba(79,244,255,.92); background:rgba(79,244,255,.11); box-shadow:0 0 18px rgba(79,244,255,.5), inset 0 0 16px rgba(79,244,255,.12); }
+    .hotspot-name { position:absolute; left:50%; bottom:-22px; translate:-50% 0; padding:2px 6px; border:1px solid rgba(216,184,106,.45); border-radius:999px; background:rgba(5,10,17,.82); color:#f9e7a6; font-size:11px; white-space:nowrap; pointer-events:none; opacity:0; }
+    .debug .hotspot-name, .hotspot.active .hotspot-name { opacity:1; }
+    .quick-actions { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+    .action-btn { border:1px solid rgba(216,184,106,.55); border-radius:12px; padding:10px 8px; color:#ffe8a8; background:linear-gradient(180deg,rgba(26,45,62,.92),rgba(10,19,31,.92)); cursor:pointer; box-shadow:inset 0 0 18px rgba(216,184,106,.06); }
+    .action-btn:active { transform:translateY(1px); }
+    .bonus-card { margin-top:10px; padding:12px; border:1px solid rgba(216,184,106,.28); border-radius:14px; background:rgba(7,15,26,.72); }
+    .bonus-card h3 { margin:0 0 8px; color:#ffe6a0; font-size:15px; }
+    .bonus-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; color:#d8e5e5; font-size:12px; }
+    .panel-mask { position:fixed; inset:0; z-index:90; display:none; align-items:flex-end; justify-content:center; background:rgba(0,0,0,.48); }
+    .panel-mask.show { display:flex; }
+    .panel { width:100%; max-width:430px; border:1px solid rgba(216,184,106,.7); border-radius:20px 20px 0 0; background:linear-gradient(180deg,rgba(14,25,40,.98),rgba(5,10,17,.98)); padding:16px 16px calc(18px + env(safe-area-inset-bottom)); box-shadow:0 -16px 48px rgba(0,0,0,.58); }
+    .panel-top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .panel h3 { margin:0; color:#ffe7a5; font-size:20px; }
+    .panel .type { display:inline-block; margin-top:6px; font-size:12px; color:#91f5ff; border:1px solid rgba(79,244,255,.32); border-radius:999px; padding:3px 8px; background:rgba(79,244,255,.08); }
+    .close { width:34px; height:34px; border:1px solid rgba(216,184,106,.45); border-radius:999px; background:rgba(255,255,255,.04); color:#ffe7a5; cursor:pointer; }
+    .panel-info { margin:12px 0; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .info-box { padding:10px; border:1px solid rgba(216,184,106,.25); border-radius:12px; background:rgba(255,255,255,.035); }
+    .info-box label { display:block; font-size:11px; color:var(--muted); }
+    .info-box strong { display:block; margin-top:4px; font-size:14px; color:#fff1bb; }
+    .upgrade { width:100%; margin-top:6px; padding:12px; border:1px solid rgba(216,184,106,.8); border-radius:14px; background:linear-gradient(180deg,#b98a31,#6d4617); color:#fff6ce; font-weight:800; cursor:pointer; }
+    .upgrade:disabled { opacity:.45; cursor:not-allowed; }
+    .msg { min-height:20px; margin-top:10px; color:#bcecff; font-size:13px; }
+    .bottom-nav { position:fixed; left:50%; bottom:0; translate:-50% 0; width:100%; max-width:430px; z-index:40; display:grid; grid-template-columns:repeat(5,1fr); gap:4px; padding:8px 8px calc(8px + env(safe-area-inset-bottom)); border-top:1px solid rgba(216,184,106,.28); background:linear-gradient(180deg,rgba(7,12,18,.6),rgba(3,7,12,.97)); backdrop-filter:blur(12px); }
+    .nav-btn { border:0; border-radius:12px; padding:8px 4px; color:#b9c7d0; background:transparent; cursor:pointer; font-size:12px; }
+    .nav-btn.active { color:#ffe7a5; background:rgba(216,184,106,.12); box-shadow:inset 0 0 0 1px rgba(216,184,106,.24); }
+    @media (min-width: 760px) { body { padding:20px 0; } .phone { min-height:calc(100dvh - 40px); border-radius:28px; border:1px solid rgba(216,184,106,.35); } .bottom-nav { bottom:20px; border-radius:0 0 28px 28px; } }
+  </style>
+</head>
+<body>
+  <main class="phone">
+    <header class="topbar">
+      <div class="title-row">
+        <div>
+          <div class="game-title" data-i18n="game.title">修仙世界</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;" data-i18n="game.subtitle">洞府 · 测试版</div>
+        </div>
+        <button class="small-btn" id="langBtn">中 / EN</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><label data-i18n="stat.qi">灵气</label><strong id="qiValue">0</strong></div>
+        <div class="stat"><label data-i18n="stat.stone">灵石</label><strong id="stoneValue">0</strong></div>
+        <div class="stat"><label data-i18n="stat.realm">境界</label><strong id="realmValue">炼气期</strong></div>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="section-head">
+        <div>
+          <h2 data-i18n="cave.title">我的洞府</h2>
+          <p data-i18n="cave.desc">点击建筑查看等级与升级收益。</p>
+        </div>
+        <button class="small-btn" id="debugBtn" data-i18n="button.hotspots">显示热区</button>
+      </div>
+
+      <div class="cave-wrap" id="caveWrap">
+        <img class="cave-img" src="data:image/webp;base64,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 " alt="Cave Residence" />
+        <div class="hotspot-layer" id="hotspotLayer"></div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="action-btn" id="cultivateBtn" data-i18n="button.cultivate">修炼一次</button>
+        <button class="action-btn" id="collectBtn" data-i18n="button.collect">收取收益</button>
+        <button class="action-btn" id="resetBtn" data-i18n="button.reset">重置存档</button>
+      </div>
+
+      <div class="bonus-card">
+        <h3 data-i18n="bonus.title">洞府总加成</h3>
+        <div class="bonus-grid" id="bonusGrid"></div>
+      </div>
+    </section>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn" data-i18n="nav.character">角色</button>
+      <button class="nav-btn" data-i18n="nav.bag">背包</button>
+      <button class="nav-btn active" data-i18n="nav.cave">洞府</button>
+      <button class="nav-btn" data-i18n="nav.adventure">游历</button>
+      <button class="nav-btn" data-i18n="nav.shop">商城</button>
+    </nav>
+  </main>
+
+  <div class="panel-mask" id="panelMask">
+    <section class="panel">
+      <div class="panel-top">
+        <div>
+          <h3 id="panelTitle">主殿</h3>
+          <span class="type" id="panelType">核心建筑</span>
+        </div>
+        <button class="close" id="closePanel">×</button>
+      </div>
+      <div class="panel-info">
+        <div class="info-box"><label data-i18n="panel.level">等级</label><strong id="panelLevel">Lv.1</strong></div>
+        <div class="info-box"><label data-i18n="panel.cost">升级消耗</label><strong id="panelCost">120 灵石</strong></div>
+        <div class="info-box" style="grid-column:1/-1;"><label data-i18n="panel.bonus">当前收益</label><strong id="panelBonus">修炼速度 +5%</strong></div>
+      </div>
+      <button class="upgrade" id="upgradeBtn" data-i18n="button.upgrade">升级建筑</button>
+      <div class="msg" id="panelMsg"></div>
+    </section>
+  </div>
+
+  <script>
+    const SAVE_KEY = "cultivation-world-save";
+    const DEFAULT_LANG = "zh";
+
+    const TEXT = {
+      zh: {
+        "game.title":"修仙世界", "game.subtitle":"洞府 · 测试版",
+        "stat.qi":"灵气", "stat.stone":"灵石", "stat.realm":"境界", "realm.qi_refining":"炼气期",
+        "cave.title":"我的洞府", "cave.desc":"点击建筑查看等级与升级收益。",
+        "button.hotspots":"显示热区", "button.hideHotspots":"隐藏热区", "button.cultivate":"修炼一次", "button.collect":"收取收益", "button.reset":"重置存档", "button.upgrade":"升级建筑",
+        "bonus.title":"洞府总加成", "panel.level":"等级", "panel.cost":"升级消耗", "panel.bonus":"当前收益",
+        "nav.character":"角色", "nav.bag":"背包", "nav.cave":"洞府", "nav.adventure":"游历", "nav.shop":"商城",
+        "type.core":"核心建筑", "type.production":"生产建筑", "type.workshop":"工坊建筑", "type.cultivation":"修炼建筑", "type.decor":"风水装饰",
+        "building.main_hall":"主殿", "building.spirit_field":"灵田", "building.pill_furnace":"丹炉", "building.spirit_pool":"灵池", "building.jade_table":"玉桌", "building.spirit_lamp":"灵灯", "building.crane_statue":"仙鹤雕像",
+        "msg.upgraded":"升级成功。", "msg.noStone":"灵石不足。", "msg.collect":"已收取洞府收益。", "msg.reset":"存档已重置。"
+      },
+      en: {
+        "game.title":"Cultivation World", "game.subtitle":"Cave Residence · Prototype",
+        "stat.qi":"Qi", "stat.stone":"Spirit Stones", "stat.realm":"Realm", "realm.qi_refining":"Qi Refining",
+        "cave.title":"My Cave Residence", "cave.desc":"Tap a building to view its level and upgrade bonus.",
+        "button.hotspots":"Show zones", "button.hideHotspots":"Hide zones", "button.cultivate":"Cultivate", "button.collect":"Collect", "button.reset":"Reset save", "button.upgrade":"Upgrade Building",
+        "bonus.title":"Total Cave Bonuses", "panel.level":"Level", "panel.cost":"Upgrade cost", "panel.bonus":"Current bonus",
+        "nav.character":"Character", "nav.bag":"Bag", "nav.cave":"Cave", "nav.adventure":"Adventure", "nav.shop":"Shop",
+        "type.core":"Core", "type.production":"Production", "type.workshop":"Workshop", "type.cultivation":"Cultivation", "type.decor":"Feng Shui Decor",
+        "building.main_hall":"Main Hall", "building.spirit_field":"Spirit Field", "building.pill_furnace":"Pill Furnace", "building.spirit_pool":"Spirit Pool", "building.jade_table":"Jade Table", "building.spirit_lamp":"Spirit Lamp", "building.crane_statue":"Crane Statue",
+        "msg.upgraded":"Upgrade complete.", "msg.noStone":"Not enough spirit stones.", "msg.collect":"Cave income collected.", "msg.reset":"Save reset."
+      }
+    };
+
+    const caveHotspots = [
+      { id:"main_hall", type:"core", x:38, y:15, w:26, h:18 },
+      { id:"spirit_field", type:"production", x:18, y:32, w:30, h:17 },
+      { id:"pill_furnace", type:"workshop", x:61, y:31, w:25, h:18 },
+      { id:"spirit_pool", type:"production", x:13, y:51, w:27, h:16 },
+      { id:"jade_table", type:"decor", x:42, y:45, w:22, h:14 },
+      { id:"spirit_lamp", type:"decor", x:68, y:51, w:18, h:15 },
+      { id:"crane_statue", type:"decor", x:43, y:62, w:20, h:13 }
+    ];
+
+    const bonusRules = {
+      main_hall: level => ({ zh:`洞府等级上限 +${level}`, en:`Cave level cap +${level}` }),
+      spirit_field: level => ({ zh:`灵草产量 +${level * 10}%`, en:`Herb production +${level * 10}%` }),
+      pill_furnace: level => ({ zh:`突破成功率 +${level * 2}%`, en:`Breakthrough chance +${level * 2}%` }),
+      spirit_pool: level => ({ zh:`修炼速度 +${level * 5}%`, en:`Qi gain +${level * 5}%` }),
+      jade_table: level => ({ zh:`游历奖励 +${level * 3}%`, en:`Adventure rewards +${level * 3}%` }),
+      spirit_lamp: level => ({ zh:`离线收益 +${level * 4}%`, en:`Offline gains +${level * 4}%` }),
+      crane_statue: level => ({ zh:`气运 +${level}`, en:`Luck +${level}` })
+    };
+
+    let selectedBuilding = null;
+
+    function getLang() { return localStorage.getItem("cw_lang") || DEFAULT_LANG; }
+    function setLang(lang) { localStorage.setItem("cw_lang", lang); renderAll(); }
+    function t(key) { return TEXT[getLang()]?.[key] || TEXT.zh[key] || key; }
+
+    function loadSave() {
+      const raw = localStorage.getItem(SAVE_KEY);
+      let save;
+      try { save = raw ? JSON.parse(raw) : null; } catch { save = null; }
+      if (!save) save = { qi: 0, spiritStone: 1000, realm: "qi_refining", cave: { buildingLevels: {} } };
+      if (!save.cave) save.cave = { buildingLevels: {} };
+      if (!save.cave.buildingLevels) save.cave.buildingLevels = {};
+      caveHotspots.forEach(b => { if (!save.cave.buildingLevels[b.id]) save.cave.buildingLevels[b.id] = 1; });
+      return save;
+    }
+    function saveGame(save) { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }
+
+    function costFor(level) { return 100 + level * 120; }
+    function bonusFor(id, level) { return bonusRules[id]?.(level)?.[getLang()] || `+${level}`; }
+
+    function renderI18n() {
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (key === "button.hotspots" && document.getElementById("caveWrap").classList.contains("debug")) el.textContent = t("button.hideHotspots");
+        else el.textContent = t(key);
+      });
+    }
+
+    function renderStats() {
+      const save = loadSave();
+      document.getElementById("qiValue").textContent = Math.floor(save.qi).toLocaleString();
+      document.getElementById("stoneValue").textContent = Math.floor(save.spiritStone).toLocaleString();
+      document.getElementById("realmValue").textContent = t(`realm.${save.realm}`);
+    }
+
+    function renderHotspots() {
+      const layer = document.getElementById("hotspotLayer");
+      layer.innerHTML = "";
+      caveHotspots.forEach(building => {
+        const btn = document.createElement("button");
+        btn.className = "hotspot";
+        btn.dataset.id = building.id;
+        btn.style.left = building.x + "%";
+        btn.style.top = building.y + "%";
+        btn.style.width = building.w + "%";
+        btn.style.height = building.h + "%";
+        btn.setAttribute("aria-label", t(`building.${building.id}`));
+        btn.innerHTML = `<span class="hotspot-name">${t(`building.${building.id}`)}</span>`;
+        btn.addEventListener("click", () => openPanel(building));
+        layer.appendChild(btn);
+      });
+    }
+
+    function renderBonuses() {
+      const save = loadSave();
+      const grid = document.getElementById("bonusGrid");
+      grid.innerHTML = caveHotspots.map(b => {
+        const level = save.cave.buildingLevels[b.id] || 1;
+        return `<div>• ${t(`building.${b.id}`)} Lv.${level}<br><span style="color:#91f5ff">${bonusFor(b.id, level)}</span></div>`;
+      }).join("");
+    }
+
+    function openPanel(building) {
+      selectedBuilding = building;
+      const save = loadSave();
+      const level = save.cave.buildingLevels[building.id] || 1;
+      document.querySelectorAll(".hotspot").forEach(el => el.classList.toggle("active", el.dataset.id === building.id));
+      document.getElementById("panelTitle").textContent = t(`building.${building.id}`);
+      document.getElementById("panelType").textContent = t(`type.${building.type}`);
+      document.getElementById("panelLevel").textContent = `Lv.${level}`;
+      document.getElementById("panelCost").textContent = `${costFor(level).toLocaleString()} ${t("stat.stone")}`;
+      document.getElementById("panelBonus").textContent = bonusFor(building.id, level);
+      document.getElementById("panelMsg").textContent = "";
+      document.getElementById("panelMask").classList.add("show");
+    }
+
+    function closePanel() {
+      selectedBuilding = null;
+      document.getElementById("panelMask").classList.remove("show");
+      document.querySelectorAll(".hotspot").forEach(el => el.classList.remove("active"));
+    }
+
+    function renderAll() { renderI18n(); renderStats(); renderHotspots(); renderBonuses(); if (selectedBuilding) openPanel(selectedBuilding); }
+
+    document.getElementById("langBtn").addEventListener("click", () => setLang(getLang() === "zh" ? "en" : "zh"));
+    document.getElementById("debugBtn").addEventListener("click", () => { document.getElementById("caveWrap").classList.toggle("debug"); renderI18n(); });
+    document.getElementById("closePanel").addEventListener("click", closePanel);
+    document.getElementById("panelMask").addEventListener("click", e => { if (e.target.id === "panelMask") closePanel(); });
+    document.getElementById("upgradeBtn").addEventListener("click", () => {
+      if (!selectedBuilding) return;
+      const save = loadSave();
+      const id = selectedBuilding.id;
+      const level = save.cave.buildingLevels[id] || 1;
+      const cost = costFor(level);
+      const msg = document.getElementById("panelMsg");
+      if (save.spiritStone < cost) { msg.textContent = t("msg.noStone"); msg.style.color = "var(--danger)"; return; }
+      save.spiritStone -= cost;
+      save.cave.buildingLevels[id] = level + 1;
+      saveGame(save);
+      msg.textContent = t("msg.upgraded"); msg.style.color = "var(--green)";
+      renderStats(); renderBonuses(); openPanel(selectedBuilding);
+    });
+    document.getElementById("cultivateBtn").addEventListener("click", () => { const save = loadSave(); save.qi += 10 + (save.cave.buildingLevels.spirit_pool || 1) * 3; saveGame(save); renderStats(); });
+    document.getElementById("collectBtn").addEventListener("click", () => { const save = loadSave(); const gain = 60 + (save.cave.buildingLevels.spirit_field || 1) * 15; save.spiritStone += gain; saveGame(save); renderStats(); alert(t("msg.collect") + ` +${gain}`); });
+    document.getElementById("resetBtn").addEventListener("click", () => { if (!confirm(t("msg.reset") + "?")) return; localStorage.removeItem(SAVE_KEY); renderAll(); });
+
+    saveGame(loadSave());
+    renderAll();
+  </script>
+</body>
+</html>
